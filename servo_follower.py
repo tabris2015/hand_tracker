@@ -15,6 +15,7 @@ class ServoFollower:
     def __init__(self, pan_pin: int, tilt_pin: int):
         self.pan_pin = pan_pin
         self.tilt_pin = tilt_pin
+        GPIO.cleanup()
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pan_pin, GPIO.OUT)
         GPIO.setup(self.tilt_pin, GPIO.OUT)
