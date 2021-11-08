@@ -6,7 +6,7 @@ import mediapipe as mp
 
 from servo_follower import ServoFollower
 
-CENTER_TOLERANCE = 80
+CENTER_TOLERANCE = 50
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -77,8 +77,8 @@ def main():
         results = hands.process(image)
         cv2.rectangle(
             image,
-            (width // 2 - CENTER_TOLERANCE // 2, height // 2 - CENTER_TOLERANCE),
-            (width // 2 + CENTER_TOLERANCE // 2, height // 2 + CENTER_TOLERANCE),
+            (height // 2 - CENTER_TOLERANCE, width // 2 - CENTER_TOLERANCE),
+            (height // 2 + CENTER_TOLERANCE, width // 2 + CENTER_TOLERANCE),
             (0, 255, 0),
             3
         )
@@ -90,10 +90,10 @@ def main():
                     cv2.putText(image, "follow", (5, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
                     delta_pan = 0
                     delta_tilt = 0
-                    if abs(marcadores[0][0] - width / 2) > CENTER_TOLERANCE:
-                        delta_pan = 0.02 if (marcadores[0][0] - width / 2) > 0 else -0.02
-                    if abs(marcadores[0][1] - height / 2) > CENTER_TOLERANCE:
-                        delta_tilt = -0.02 if (marcadores[0][1] - height / 2) > 0 else 0.02
+                    if abs(marcadores[0][1] - width / 2) > CENTER_TOLERANCE:
+                        delta_pan = 0.02 if (marcadores[0][1] - width / 2) > 0 else -0.02
+                    if abs(marcadores[0][0] - height / 2) > CENTER_TOLERANCE:
+                        delta_tilt = -0.02 if (marcadores[0][0] - height / 2) > 0 else 0.02
 
                     print(f"moviendo ({delta_pan}, {delta_tilt})")
                     follower.set_delta_pan_tilt(delta_pan, delta_tilt)
