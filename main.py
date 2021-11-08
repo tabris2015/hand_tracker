@@ -8,7 +8,14 @@ import mediapipe as mp
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", type=int, default=1)
-
+    parser.add_argument("--min_det_conf",
+                        help='min_detection_confidence',
+                        type=float,
+                        default=0.7)
+    parser.add_argument("--min_track_conf",
+                        help='min_tracking_confidence',
+                        type=float,
+                        default=0.5)
     args = parser.parse_args()
 
     return args
@@ -46,10 +53,13 @@ def main():
 
     mp_hands = mp.solutions.hands
 
+    min_detection_confidence = args.min_det_conf
+    min_tracking_confidence = args.min_track_conf
+
     hands = mp_hands.Hands(
         max_num_hands=1,
-        min_detection_confidence=0.7,
-        min_tracking_confidence=0.5
+        min_detection_confidence=min_detection_confidence,
+        min_tracking_confidence=min_tracking_confidence
     )
 
     while True:
