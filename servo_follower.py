@@ -22,10 +22,11 @@ class ServoFollower:
 
         self.pan_servo = GPIO.PWM(self.pan_pin, 50)
         self.tilt_servo = GPIO.PWM(self.tilt_pin, 50)
-        self.curr_pan = self.MIN_PAN + (self.MAX_PAN - self.MIN_PAN)/2
-        self.curr_tilt = self.MIN_TILT + (self.MAX_TILT - self.MIN_TILT)/2
-        self.pan_servo.start(self.curr_pan)
-        self.tilt_servo.start(self.curr_tilt)
+        self.curr_pan, self.curr_tilt = 0.5, 0.5
+        self.curr_pan_duty = self.MIN_PAN + (self.MAX_PAN - self.MIN_PAN) * self.curr_pan
+        self.curr_tilt_duty = self.MIN_TILT + (self.MAX_TILT - self.MIN_TILT) * self.curr_tilt
+        self.pan_servo.start(self.curr_pan_duty)
+        self.tilt_servo.start(self.curr_tilt_duty)
 
     def stop(self):
         self.pan_servo.stop()
@@ -39,8 +40,9 @@ class ServoFollower:
             pan = 0.0
         if pan > 1.0:
             pan = 1.0
-        self.curr_pan = self.MIN_PAN + (self.MAX_PAN - self.MIN_PAN) * pan
-        self.pan_servo.ChangeDutyCycle(self.curr_pan)
+        self.curr_pan = pan
+        self.curr_pan_duty = self.MIN_PAN + (self.MAX_PAN - self.MIN_PAN) * pan
+        self.pan_servo.ChangeDutyCycle(self.curr_pan_duty)
 
     def set_tilt(self, tilt: float):
         if tilt < 0.0:
@@ -48,15 +50,20 @@ class ServoFollower:
         if tilt > 1.0:
             tilt = 1.0
 
-        self.curr_tilt = self.MIN_TILT + (self.MAX_TILT - self.MIN_TILT) * tilt
-        self.tilt_servo.ChangeDutyCycle(self.curr_tilt)
+        self.curr_tilt = tilt
+        self.curr_tilt_duty = self.MIN_TILT + (self.MAX_TILT - self.MIN_TILT) * tilt
+        self.tilt_servo.ChangeDutyCycle(self.curr_tilt_duty)
 
     def set_pan_tilt(self, pan: float, tilt: float):
         self.set_pan(pan)
         self.set_tilt(tilt)
 
+        return self.curr_pan, self.curr_tilt
+
     def set_delta_pan_tilt(self, delta_pan: float = 0, delta_tilt: float = 0):
-        self.curr_pan += delta_pan
-        self.curr_tilt += delta_tilt
-        self.set_pan(self.curr_pan)
-        self.set_tilt(self.curr_tilt)
+        goal_pan = self.curr_pan + delta_pan
+        goal_tilt = self.curr_tilt + delta_tilt
+        self.set_pan(goal_pan)
+        self.set_tilt(goal_tilt)
+
+        return self.curr_pan, self.curr_tilt
