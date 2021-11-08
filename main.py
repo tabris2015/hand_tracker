@@ -4,6 +4,9 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
+from servo_follower import ServoFollower
+
+CENTER_TOLERANCE = 10
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -16,6 +19,8 @@ def get_args():
                         help='min_tracking_confidence',
                         type=float,
                         default=0.5)
+    parser.add_argument("--pan_pin", type=int, default=12)
+    parser.add_argument("--tilt_pin", type=int, default=13)
     args = parser.parse_args()
 
     return args
@@ -48,7 +53,6 @@ def main():
     args = get_args()
 
     cap_device = args.device
-
     cap = cv2.VideoCapture(cap_device)
 
     mp_hands = mp.solutions.hands
@@ -62,8 +66,11 @@ def main():
         min_tracking_confidence=min_tracking_confidence
     )
 
+    follower = ServoFollower(args.pan_pin, args.tilt_pin)
+
     while True:
         ret, frame = cap.read()
+        width, height, _ = frame.shape
         if not ret:
             break
         image = cv2.flip(frame, 1)
@@ -71,9 +78,18 @@ def main():
         if results.multi_hand_landmarks is not None:
             for hand_landmarks in results.multi_hand_landmarks:
                 image, marcadores = obtener_marcadores(image, hand_landmarks)
+
                 if len(marcadores) == 2 and dist_3d(*marcadores) < 50:
                     print(dist_3d(*marcadores))
                     cv2.putText(image, "follow", (5, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                    delta_pan = 0
+                    delta_tilt = 0
+                    if abs(marcadores[0][0] - width / 2) > CENTER_TOLERANCE:
+                        delta_pan = 0.05 if (marcadores[0][0] - width / 2) > 0 else -0.5
+                    if abs(marcadores[0][1] - height / 2) > CENTER_TOLERANCE:
+                        delta_tilt = 0.05 if (marcadores[0][0] - height / 2) > 0 else -0.5
+
+                    follower.set_delta_pan_tilt(delta_pan, delta_tilt)
 
         cv2.imshow("hands", image)
         key = cv2.waitKey(1)
