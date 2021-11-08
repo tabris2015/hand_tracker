@@ -6,7 +6,7 @@ import mediapipe as mp
 
 from servo_follower import ServoFollower
 
-CENTER_TOLERANCE = 10
+CENTER_TOLERANCE = 80
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -75,22 +75,30 @@ def main():
             break
         image = cv2.flip(frame, 1)
         results = hands.process(image)
+        cv2.rectangle(
+            image,
+            (width // 2 - CENTER_TOLERANCE // 2, height // 2 - CENTER_TOLERANCE),
+            (width // 2 + CENTER_TOLERANCE // 2, height // 2 + CENTER_TOLERANCE),
+            (0, 255, 0),
+            3
+        )
         if results.multi_hand_landmarks is not None:
             for hand_landmarks in results.multi_hand_landmarks:
                 image, marcadores = obtener_marcadores(image, hand_landmarks)
 
                 if len(marcadores) == 2 and dist_3d(*marcadores) < 50:
-                    print(dist_3d(*marcadores))
                     cv2.putText(image, "follow", (5, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
                     delta_pan = 0
                     delta_tilt = 0
                     if abs(marcadores[0][0] - width / 2) > CENTER_TOLERANCE:
-                        delta_pan = 0.05 if (marcadores[0][0] - width / 2) > 0 else -0.5
+                        delta_pan = 0.02 if (marcadores[0][0] - width / 2) > 0 else -0.02
                     if abs(marcadores[0][1] - height / 2) > CENTER_TOLERANCE:
-                        delta_tilt = 0.05 if (marcadores[0][0] - height / 2) > 0 else -0.5
+                        delta_tilt = -0.02 if (marcadores[0][1] - height / 2) > 0 else 0.02
 
+                    print(f"moviendo ({delta_pan}, {delta_tilt})")
                     follower.set_delta_pan_tilt(delta_pan, delta_tilt)
-
+        else:
+            follower.set_delta_pan_tilt(0, 0)
         cv2.imshow("hands", image)
         key = cv2.waitKey(1)
         if key == 27:
