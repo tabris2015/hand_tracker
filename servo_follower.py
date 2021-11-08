@@ -56,5 +56,7 @@ class ServoFollower:
         self.set_tilt(tilt)
 
     def set_delta_pan_tilt(self, delta_pan: float = 0, delta_tilt: float = 0):
-        self.set_pan(self.curr_pan + delta_pan)
-        self.set_tilt(self.curr_tilt + delta_tilt)
+        self.curr_pan += delta_pan
+        self.curr_tilt += delta_tilt
+        self.set_pan(self.curr_pan)
+        self.set_tilt(self.curr_tilt)
